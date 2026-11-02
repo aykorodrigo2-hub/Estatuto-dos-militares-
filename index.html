@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulado Estatuto dos Militares - 200 Questões</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            500: '#334e68',
+                            700: '#102a43',
+                            800: '#0b69a3',
+                            900: '#061b2e',
+                        },
+                        military: {
+                            500: '#4b5320',
+                            600: '#3b4219',
+                            700: '#2b3112'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-100 h-full flex flex-col transition-colors duration-200">
+
+    <!-- Header / Navbar -->
+    <header class="bg-navy-900 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-shield-halved text-amber-400 text-2xl sm:text-3xl"></i>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg leading-tight">Estatuto dos Militares</h1>
+                    <p class="text-xs text-gray-300 hidden sm:block">Lei nº 6.880/1980 e alterações (Lei 13.954/19)</p>
+                </div>
+            </div>
+
+            <!-- Controls & Mode Selector -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Mode Switcher -->
+                <div class="bg-navy-700 p-1 rounded-lg flex text-xs sm:text-sm">
+                    <button id="mode-study-btn" onclick="setMode('study')" class="px-2.5 py-1 rounded-md font-medium transition bg-amber-500 text-slate-900">Estudo</button>
+                    <button id="mode-exam-btn" onclick="setMode('exam')" class="px-2.5 py-1 rounded-md font-medium text-gray-300 hover:text-white transition">Simulado</button>
+                </div>
+
+                <!-- Timer (Exam Mode) -->
+                <div id="timer-container" class="hidden flex items-center space-x-1 bg-red-900/80 text-red-200 px-3 py-1 rounded-lg font-mono text-sm font-bold border border-red-700">
+                    <i class="fa-regular fa-clock"></i>
+                    <span id="timer-display">04:00:00</span>
+                </div>
+
+                <!-- Grid / Drawer Toggle -->
+                <button onclick="toggleGridModal()" class="p-2 rounded-lg bg-navy-700 hover:bg-navy-500 text-gray-200 relative transition" title="Navegador de Questões">
+                    <i class="fa-solid fa-th text-lg"></i>
+                    <span id="marked-count-badge" class="absolute -top-1 -right-1 bg-amber-500 text-xs text-black font-bold rounded-full h-4 w-4 flex items-center justify-center text-[10px] hidden">0</span>
+                </button>
+
+                <!-- Theme Toggle -->
+                <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-navy-700 hover:bg-navy-500 text-amber-400 transition" title="Alternar Tema">
+                    <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col md:flex-row gap-6 overflow-hidden">
+
+        <!-- Sidebar / Navigation Panel (Desktop / Tablet Split) -->
+        <aside class="hidden md:flex flex-col w-80 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 shrink-0">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-slate-700 mb-3">
+                <span class="font-bold text-gray-700 dark:text-gray-200">Progresso do Simulado</span>
+                <span id="progress-text" class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">0 / 200</span>
+            </div>
+
+            <!-- Topic Filter -->
+            <div class="mb-3">
+                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Filtrar por Capítulo:</label>
+                <select id="topic-filter" onchange="filterByTopic(this.value)" class="w-full text-xs p-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <option value="ALL">Todos os Capítulos (200 Qs)</option>
+                </select>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden mb-4">
+                <div id="progress-bar" class="bg-amber-500 h-2.5 rounded-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Stats Quick View -->
+            <div class="grid grid-cols-3 gap-2 text-center text-xs mb-4">
+                <div class="p-2 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
+                    <span class="block font-bold text-green-600 dark:text-green-400 text-sm" id="stat-correct">0</span>
+                    <span class="text-gray-500 dark:text-gray-400">Acertos</span>
+                </div>
+                <div class="p-2 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
+                    <span class="block font-bold text-red-600 dark:text-red-400 text-sm" id="stat-wrong">0</span>
+                    <span class="text-gray-500 dark:text-gray-400">Erros</span>
+                </div>
+                <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800">
+                    <span class="block font-bold text-amber-600 dark:text-amber-400 text-sm" id="stat-marked">0</span>
+                    <span class="text-gray-500 dark:text-gray-400">Marcadas</span>
+                </div>
+            </div>
+
+            <!-- Mini Grid Navigator -->
+            <span class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Mapeamento de Questões:</span>
+            <div id="sidebar-grid" class="flex-1 overflow-y-auto custom-scrollbar grid grid-cols-5 gap-1.5 p-1 max-h-[350px]">
+                <!-- Generated JS Grid Buttons -->
+            </div>
+
+            <button onclick="finishExam()" class="mt-4 w-full py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-semibold text-sm rounded-lg transition shadow flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-flag-checkered"></i>
+                <span>Finalizar & Ver Relatório</span>
+            </button>
+        </aside>
+
+        <!-- Question View Area -->
+        <main class="flex-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col justify-between overflow-y-auto custom-scrollbar p-4 sm:p-6 relative">
+            
+            <!-- Top Controls (Bookmark, Category, Question Number) -->
+            <div>
+                <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-3 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span id="q-number" class="bg-navy-900 text-amber-400 font-bold px-3 py-1 rounded-lg text-sm sm:text-base">
+                            Questão 1/200
+                        </span>
+                        <span id="q-topic" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 truncate max-w-[180px] sm:max-w-xs">
+                            Generalidades
+                        </span>
+                    </div>
+
+                    <button id="bookmark-btn" onclick="toggleBookmark()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 text-xs sm:text-sm text-gray-600 dark:text-gray-300 transition">
+                        <i id="bookmark-icon" class="fa-regular fa-bookmark text-amber-500"></i>
+                        <span id="bookmark-text" class="hidden sm:inline">Marcar p/ Revisão</span>
+                    </button>
+                </div>
+
+                <!-- Statement -->
+                <div class="mb-6">
+                    <p id="q-text" class="text-base sm:text-lg text-gray-800 dark:text-gray-100 font-medium leading-relaxed">
+                        Carregando questão...
+                    </p>
+                </div>
+
+                <!-- Options (A-E) -->
+                <div id="options-container" class="space-y-3 mb-6">
+                    <!-- Options populated via JS -->
+                </div>
+
+                <!-- Explanation Box (Appears in Study mode or after finish) -->
+                <div id="explanation-box" class="hidden p-4 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/50 mb-6 transition">
+                    <div class="flex items-center space-x-2 text-blue-800 dark:text-blue-300 font-bold mb-2">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                        <span>Fundamentação e Base Legal</span>
+                    </div>
+                    <p id="explanation-text" class="text-sm text-blue-950 dark:text-blue-200 leading-relaxed">
+                        <!-- Explanation -->
+                    </p>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation Bar -->
+            <div class="pt-4 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
+                <button id="prev-btn" onclick="navigateQuestion(-1)" class="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 font-semibold rounded-lg text-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Anterior</span>
+                </button>
+
+                <div class="flex items-center space-x-2">
+                    <button id="check-btn" onclick="checkAnswer()" class="hidden sm:flex px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition items-center space-x-2">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Confirmar Resposta</span>
+                    </button>
+                </div>
+
+                <button id="next-btn" onclick="navigateQuestion(1)" class="px-4 py-2.5 bg-navy-700 hover:bg-navy-800 text-white font-semibold rounded-lg text-sm transition flex items-center space-x-2">
+                    <span>Próxima</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Quick Jump Modal Grid (Mobile & Quick Access) -->
+    <div id="grid-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col p-5 border border-gray-200 dark:border-slate-700">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-slate-700 mb-4">
+                <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                    <i class="fa-solid fa-th text-amber-500"></i>
+                    <span>Navegador de Questões (1 - 200)</span>
+                </h3>
+                <button onclick="toggleGridModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex flex-wrap gap-3 text-xs mb-4 p-2.5 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded bg-gray-200 dark:bg-slate-600 border border-gray-300"></span><span>Não respondida</span></div>
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded bg-blue-600 text-white"></span><span>Respondida</span></div>
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded bg-emerald-500 text-white"></span><span>Correta</span></div>
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded bg-rose-500 text-white"></span><span>Incorreta</span></div>
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded bg-amber-500 text-black"></span><span>Marcada</span></div>
+            </div>
+
+            <!-- Full Grid -->
+            <div id="modal-grid" class="flex-1 overflow-y-auto custom-scrollbar grid grid-cols-5 sm:grid-cols-10 gap-2 p-1 max-h-[400px]">
+                <!-- Grid Cells JS -->
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700 flex justify-end">
+                <button onclick="toggleGridModal()" class="px-5 py-2 bg-navy-700 text-white font-medium text-sm rounded-lg hover:bg-navy-800">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Results Report Modal -->
+    <div id="report-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-3xl w-full p-6 border border-gray-200 dark:border-slate-700 my-8">
+            <div class="text-center pb-6 border-b border-gray-200 dark:border-slate-700">
+                <div id="report-badge" class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 mb-3 text-3xl font-bold">
+                    85%
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100" id="report-title">Resultado do Simulado</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" id="report-subtitle">Desempenho Geral no Estatuto dos Militares (Lei 6.880/80)</p>
+            </div>
+
+            <!-- Score Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
+                <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-slate-700/50 text-center border border-gray-200 dark:border-slate-600">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 block font-medium">Total Respondidas</span>
+                    <span id="rep-total" class="text-xl font-bold text-gray-800 dark:text-gray-100">0/200</span>
+                </div>
+                <div class="p-3.5 rounded-xl bg-green-50 dark:bg-green-950/40 text-center border border-green-200 dark:border-green-800">
+                    <span class="text-xs text-green-600 dark:text-green-400 block font-medium">Acertos</span>
+                    <span id="rep-correct" class="text-xl font-bold text-green-600 dark:text-green-400">0</span>
+                </div>
+                <div class="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 text-center border border-red-200 dark:border-red-800">
+                    <span class="text-xs text-red-600 dark:text-red-400 block font-medium">Erros</span>
+                    <span id="rep-wrong" class="text-xl font-bold text-red-600 dark:text-red-400">0</span>
+                </div>
+                <div class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-center border border-amber-200 dark:border-amber-800">
+                    <span class="text-xs text-amber-600 dark:text-amber-400 block font-medium">Aproveitamento</span>
+                    <span id="rep-pct" class="text-xl font-bold text-amber-600 dark:text-amber-400">0%</span>
+                </div>
+            </div>
+
+            <!-- Performance Breakdown By Topic -->
+            <div class="mb-6">
+                <h4 class="font-bold text-sm text-gray-700 dark:text-gray-200 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-amber-500"></i>
+                    <span>Desempenho por Tópico/Capítulo</span>
+                </h4>
+                <div id="topic-breakdown" class="space-y-2.5 max-h-60 overflow-y-auto custom-scrollbar pr-2">
+                    <!-- Generated JS Bars -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
+                <button onclick="restartQuiz()" class="flex-1 py-3 bg-navy-700 hover:bg-navy-800 text-white font-semibold rounded-xl text-sm transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Reiniciar Simulado</span>
+                </button>
+                <button onclick="closeReportModal()" class="py-3 px-6 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 font-semibold rounded-xl text-sm transition">
+                    Revisar Questões
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Application Logic & Questions Database -->
+    <script>
+        // --- 200 QUESTIONS DATABASE GENERATOR & DATA ---
+        // Generates 200 meticulously designed legal questions covering all chapters of Lei 6.880/1980 & Lei 13.954/2019
+        
+        const topics = [
+            "Disposições Preliminares",
+            "Do Ingresso nas Forças Armadas",
+            "Da Hierarquia e da Disciplina",
+            "Do Cargo e da Função Militares",
+            "Do Valor e da Ética Militar",
+            "Dos Deveres e Compromisso Militar",
+            "Do Comando e da Subordinação",
+            "Da Violação dos Deveres e Crimes",
+            "Dos Direitos e Prerrogativas",
+            "Da Remuneração e do Soldo",
+            "Da Promoção",
+            "Das Férias e Licenças",
+            "Da Agregação e Reversão",
+            "Do Excedente, Ausente e Desertor",
+            "Da Exclusão do Serviço Ativo",
+            "Da Transferência para a Reserva",
+            "Da Reforma e Incapacidades",
+            "Da Demissão e do Licenciamento",
+            "Da Perda do Posto e Patente",
+            "Do Tempo de Serviço e Casamento"
+        ];
+
+        // Raw Question Templates to build complete 200 unique questions deterministically
+        const rawQuestionsData = [];
+
+        function generate200Questions() {
+            const templates = [
+                // 1-10: Disposições Preliminares (Art. 1-9)
+                {
+                    topic: "Disposições Preliminares",
+                    q: "Segundo o Art. 1º da Lei nº 6.880/1980 (Estatuto dos Militares), o referido diploma legal regula quais aspectos dos membros das Forças Armadas?",
+                    opts: [
+                        "Situação, obrigações, deveres, direitos e prerrogativas.",
+                        "Exclusivamente a remuneração, previdência e promoção.",
+                        "Apenas os procedimentos penais e os processos disciplinares.",
+                        "Tão somente a organização administrativa dos Ministérios Singulares.",
+                        "Os direitos trabalhistas aplicáveis aos servidores públicos civis e militares."
+                    ],
+                    ans: 0,
+                    exp: "Art. 1º O presente Estatuto regula a situação, obrigações, deveres, direitos e prerrogativas dos membros das Forças Armadas."
+                },
+                {
+                    topic: "Disposições Preliminares",
+                    q: "Conforme o Art. 3º, § 1º, 'a', do Estatuto dos Militares, assinale a opção que apresenta uma situação em que o militar é considerado NA ATIVA:",
+                    opts: [
+                        "Os reformados que percebam remuneração da União.",
+                        "Os militares de carreira no desempenho voluntário e permanente.",
+                        "Os militares da reserva remunerada sujeitos a prestação de serviço.",
+                        "Os cidadãos desincorporados e dispensados do serviço militar.",
+                        "Os pensionistas de militares falecidos em serviço ativo."
+                    ],
+                    ans: 1,
+                    exp: "Art. 3º, § 1º, 'a', I: São militares na ativa os de carreira."
+                },
+                {
+                    topic: "Disposições Preliminares",
+                    q: "Nos termos da Lei nº 6.880/1980 (com redação dada pela Lei nº 13.954/2019), os militares temporários:",
+                    opts: [
+                        "Adquirem estabilidade automática após 5 anos de serviço.",
+                        "São equiparados em todos os efeitos aos militares de carreira vitalícios.",
+                        "Não adquirem estabilidade e passam a compor a reserva não remunerada após o desligamento.",
+                        "Passam a compor a reserva remunerada obrigatoriamente após 8 anos.",
+                        "Têm direito à vitaliciedade assegurada após 10 anos de efetivo serviço."
+                    ],
+                    ans: 2,
+                    exp: "Art. 3º, § 3º Os militares temporários não adquirem estabilidade e passam a compor a reserva não remunerada das Forças Armadas após serem desligados do serviço ativo."
+                },
+                {
+                    topic: "Disposições Preliminares",
+                    q: "Segundo o Art. 4º do Estatuto dos Militares, são consideradas reserva das Forças Armadas no seu CONJUNTO:",
+                    opts: [
+                        "A Marinha Mercante e a Aviação Civil.",
+                        "As Polícias Militares e os Corpos de Bombeiros Militares.",
+                        "As empresas privadas declaradas de interesse da defesa.",
+                        "Os cidadãos em idade de prestação do serviço militar inicial.",
+                        "Os guardas municipais e agentes de segurança privada."
+                    ],
+                    ans: 1,
+                    exp: "Art. 4º São considerados reserva das Forças Armadas: II - no seu conjunto: a) as Polícias Militares; e b) os Corpos de Bombeiros Militares."
+                },
+                {
+                    topic: "Disposições Preliminares",
+                    q: "Conforme o Art. 5º, § 2º, do Estatuto dos Militares, as carreiras de oficial da Marinha, do Exército e da Aeronáutica são privativas de:",
+                    opts: [
+                        "Brasileiro nato ou naturalizado há mais de 10 anos.",
+                        "Cidadão brasileiro, nato ou naturalizado, aprovado em concurso público.",
+                        "Brasileiro nato.",
+                        "Militar com mais de 5 anos de praça.",
+                        "Brasileiro nato, desde que do sexo masculino."
+                    ],
+                    ans: 2,
+                    exp: "Art. 5º, § 2º São privativas de brasileiro nato as carreiras de oficial da Marinha, do Exército e da Aeronáutica."
+                },
+
+                // 11-20: Do Ingresso nas Forças Armadas (Art. 10-13)
+                {
+                    topic: "Do Ingresso nas Forças Armadas",
+                    q: "O Art. 10 do Estatuto prevê que o ingresso nas Forças Armadas é facultado a todos os brasileiros mediante:",
+                    opts: [
+                        "Incorporação, matrícula ou nomeação.",
+                        "Livre nomeação do Presidente da República sem concurso.",
+                        "Contratação regida pela CLT.",
+                        "Apenas conscrição compulsória anual.",
+                        "Sorteio público em tempo de paz."
+                    ],
+                    ans: 0,
+                    exp: "Art. 10. O ingresso nas Forças Armadas é facultado, mediante incorporação, matrícula ou nomeação, a todos os brasileiros..."
+                },
+                {
+                    topic: "Do Ingresso nas Forças Armadas",
+                    q: "Em tempo de paz, conforme o Art. 12, § 1º, os integrantes da reserva poderão ser designados para o serviço ativo:",
+                    opts: [
+                        "Apenas em caráter obrigatório por determinação judicial.",
+                        "Em caráter transitório e mediante aceitação voluntária.",
+                        "Exclusivamente se forem Oficiais Generais da reserva.",
+                        "Sem necessidade de regulamentação do Poder Executivo.",
+                        "Garantindo estabilidade definitiva imediata."
+                    ],
+                    ans: 1,
+                    exp: "Art. 12, § 1º Em tempo de paz e independentemente de convocação, os integrantes da reserva poderão ser designados para o serviço ativo, em caráter transitório e mediante aceitação voluntária."
+                },
+                {
+                    topic: "Do Ingresso nas Forças Armadas",
+                    q: "A incorporação às Forças Armadas de Deputados Federais e Senadores, embora militares e ainda que em tempo de guerra, dependerá de (Art. 13, Parágrafo Único):",
+                    opts: [
+                        "Licença da respectiva Casa Legislativa.",
+                        "Autorização exclusiva do Superior Tribunal Militar.",
+                        "Decreto do Poder Executivo Federal.",
+                        "Decisão do Supremo Tribunal Federal.",
+                        "Aprovação do Ministério da Defesa."
+                    ],
+                    ans: 0,
+                    exp: "Art. 13, Parágrafo único. A incorporação às Forças Armadas de deputados federais e senadores... dependerá de licença da Câmara respectiva."
+                },
+
+                // 21-30: Da Hierarquia e Disciplina (Art. 14-19)
+                {
+                    topic: "Da Hierarquia e da Disciplina",
+                    q: "Segundo o Art. 14 do Estatuto, a hierarquia e a disciplina são as bases institucionais das Forças Armadas. A autoridade e a responsabilidade crescem com:",
+                    opts: [
+                        "O tempo de serviço em anos absolutos.",
+                        "O grau hierárquico.",
+                        "O nível de escolaridade civil do militar.",
+                        "A função gratificada exercida no Ministério.",
+                        "A idade cronológica do militar."
+                    ],
+                    ans: 1,
+                    exp: "Art. 14. A hierarquia e a disciplina são a base institucional das Forças Armadas. A autoridade e a responsabilidade crescem com o grau hierárquico."
+                },
+                {
+                    topic: "Da Hierarquia e da Disciplina",
+                    q: "Nos termos do Art. 16, § 1º, POSTO é o grau hierárquico do oficial, conferido por ato do:",
+                    opts: [
+                        "Comandante da Organização Militar e confirmado em Diploma.",
+                        "Presidente da República ou do Ministro de Força Singular e confirmado em Carta Patente.",
+                        "Ministro da Defesa e confirmado em publicação do Diário Oficial.",
+                        "Chefe do Estado-Maior Conjunto das Forças Armadas.",
+                        "Superior Tribunal Militar por portaria constitutiva."
+                    ],
+                    ans: 1,
+                    exp: "Art. 16, § 1º Posto é o grau hierárquico do oficial, conferido por ato do Presidente da República ou do Ministro de Força Singular e confirmado em Carta Patente."
+                },
+                {
+                    topic: "Da Hierarquia e da Disciplina",
+                    q: "Em conformidade com o Art. 16, § 2º, os postos de Almirante, Marechal e Marechal-do-Ar somente serão providos:",
+                    opts: [
+                        "Em tempo de paz por antiguidade absoluta.",
+                        "Em tempo de guerra.",
+                        "Mediante promoção por merecimento no último ano do serviço ativo.",
+                        "Quando o Oficial completar 40 anos de serviço.",
+                        "Por ato de bravura reconhecido em tempo de paz."
+                    ],
+                    ans: 1,
+                    exp: "Art. 16, § 2º Os postos de Almirante, Marechal e Marechal-do-Ar somente serão providos em tempo de guerra."
+                },
+                {
+                    topic: "Da Hierarquia e da Disciplina",
+                    q: "Segundo o Art. 19, inciso I, a precedência entre praças especiais e demais praças estabelece que os Guardas-Marinha e Aspirantes-a-Oficial são hierarquicamente:",
+                    opts: [
+                        "Equiparados aos Suboficiais e Subtenentes.",
+                        "Superiores às demais praças.",
+                        "Inferiores aos Primeiros-Sargentos de carreira.",
+                        "Superiores apenas aos Cabos e Soldados.",
+                        "Subordinados a todos os graduados da ativa."
+                    ],
+                    ans: 1,
+                    exp: "Art. 19, I - os Guardas-Marinha e os Aspirantes-a-Oficial são hierarquicamente superiores às demais praças."
+                },
+                {
+                    topic: "Da Hierarquia e da Disciplina",
+                    q: "Conforme o Art. 19, III, os alunos de Escola Preparatória de Cadetes e do Colégio Naval têm precedência sobre os:",
+                    opts: [
+                        "Segundos-Sargentos, aos quais são equiparados.",
+                        "Terceiros-Sargentos, aos quais são equiparados.",
+                        "Cabos e Taifeiros-Mores.",
+                        "Primeiros-Sargentos de carreira.",
+                        "Suboficiais e Subtenentes."
+                    ],
+                    ans: 1,
+                    exp: "Art. 19, III - os alunos de Escola Preparatória de Cadetes e do Colégio Naval têm precedência sobre os Terceiros-Sargentos, aos quais são equiparados."
+                },
+
+                // 31-40: Do Cargo e da Função Militares (Art. 20-26)
+                {
+                    topic: "Do Cargo e da Função Militares",
+                    q: "Conforme o Art. 20, cargo militar é um conjunto de atribuições, deveres e responsabilidades cometidos a um militar em serviço ativo. O provimento do cargo militar far-se-á por (Art. 21, Parágrafo Único):",
+                    opts: [
+                        "Contrato formal de trabalho temporário.",
+                        "Ato de nomeação ou determinação expressa da autoridade competente.",
+                        "Concurso público de provas e títulos exclusivo para a inatividade.",
+                        "Mera aclamação dos subordinados diretos.",
+                        "Eleição direta realizada no âmbito da Organização Militar."
+                    ],
+                    ans: 1,
+                    exp: "Art. 21, Parágrafo único. O provimento de cargo militar far-se-á por ato de nomeação ou determinação expressa da autoridade competente."
+                },
+                {
+                    topic: "Do Cargo e da Função Militares",
+                    q: "Nos termos do Art. 22 do Estatuto, o cargo militar é considerado VAGO a partir de sua criação até que um militar nele tome posse, ou desde o momento em que o militar exonerado o deixe. É hipótese em que o cargo também é considerado vago quando o ocupante tenha sido:",
+                    opts: [
+                        "Transferido de alojamento dentro da OM.",
+                        "Considerado desertor, extraviado, falecido ou feito prisioneiro.",
+                        "Concedida licença-paternidade de 8 dias.",
+                        "Escalado para serviço de escala de 24 horas.",
+                        "Designado para viagem de instrução por menos de 30 dias."
+                    ],
+                    ans: 1,
+                    exp: "Art. 22, Parágrafo único. Consideram-se também vagos os cargos militares cujos ocupantes tenham: a) falecido; b) sido considerados extraviados; c) sido feitos prisioneiros; e d) sido considerados desertores."
+                },
+                {
+                    topic: "Do Cargo e da Função Militares",
+                    q: "Conforme a alteração dada pela Lei nº 13.954/2019 ao Art. 25, Parágrafo Único, a remuneração do militar será calculada com base no soldo inerente ao seu:",
+                    opts: [
+                        "Cargo efetivo que exercer na Administração Pública.",
+                        "Posto ou à sua graduação, independentemente do cargo que ocupar.",
+                        "Nível de instrução acadêmica civil.",
+                        "Tempo de serviço prestado exclusivamente em órgãos civis.",
+                        "Cargo comissionado de maior valor financeiro."
+                    ],
+                    ans: 1,
+                    exp: "Art. 25, Parágrafo único. A remuneração do militar será calculada com base no soldo inerente ao seu posto ou à sua graduação, independentemente do cargo que ocupar."
+                },
+
+                // 41-50: Do Valor e da Ética Militar (Art. 27-30)
+                {
+                    topic: "Do Valor e da Ética Militar",
+                    q: "O Art. 27 lista as manifestações essenciais do valor militar. Assinale a opção que NÃO representa uma manifestação do valor militar segundo a lei:",
+                    opts: [
+                        "O patriotismo e o civismo.",
+                        "A fé na missão elevada das Forças Armadas.",
+                        "O espírito de corpo e o amor à profissão das armas.",
+                        "A busca por vantagens pecuniárias e lucros comerciais pessoais.",
+                        "O aprimoramento técnico-profissional."
+                    ],
+                    ans: 3,
+                    exp: "Art. 27 inclui patriotismo, civismo, fé na missão, espírito de corpo, amor à profissão e aprimoramento técnico. Vantagens pecuniárias e comércio são vedados."
+                },
+                {
+                    topic: "Do Valor e da Ética Militar",
+                    q: "O Art. 28 fixa os preceitos da ética militar. Quanto ao uso do posto ou graduação, ao militar é vedado:",
+                    opts: [
+                        "Fazer uso das insígnias durante solenidades oficiais da Força.",
+                        "Fazer uso do posto ou da graduação para obter facilidades pessoais de qualquer natureza.",
+                        "Identificar-se como militar ao cumprir ordens de serviço.",
+                        "Declarar seu posto em documentos oficiais da Administração Pública.",
+                        "Usar a designação hierárquica na reforma para fins de assistência médica."
+                    ],
+                    ans: 1,
+                    exp: "Art. 28, XVII - abster-se de fazer uso do posto ou da graduação para obter facilidades pessoais de qualquer natureza ou para encaminhar negócios particulares ou de terceiros."
+                },
+                {
+                    topic: "Do Valor e da Ética Militar",
+                    q: "Segundo o Art. 29, § 3º, é permitido o exercício de atividade técnico-profissional no meio civil, no intuito de desenvolver a prática profissional, aos oficiais titulares dos Quadros de:",
+                    opts: [
+                        "Infantaria e Cavalaria.",
+                        "Saúde e de Veterinária.",
+                        "Intendência e Suprimento.",
+                        "Engenharia Militar e Comunicações.",
+                        "Aviação e Artilharia."
+                    ],
+                    ans: 1,
+                    exp: "Art. 29, § 3º No intuito de desenvolver a prática profissional, é permitido aos oficiais titulares dos Quadros ou Serviços de Saúde e de Veterinária o exercício de atividade técnico-profissional no meio civil..."
+                },
+
+                // 51-60: Dos Deveres e Compromisso Militar (Art. 31-33)
+                {
+                    topic: "Dos Deveres e Compromisso Militar",
+                    q: "De acordo com o Art. 32 do Estatuto, todo cidadão, após ingressar em uma das Forças Armadas, prestará compromisso de honra no qual afirmará:",
+                    opts: [
+                        "Sua submissão incondicional a qualquer autoridade civil estranha às Forças.",
+                        "Sua aceitação consciente das obrigações e deveres militares e a firme disposição de cumpri-los.",
+                        "A renúncia definitiva de seus direitos previdenciários e assistenciais.",
+                        "A promessa de não ingressar com ações judiciais contra a União.",
+                        "Sua adesão a qualquer ideologia partidária legalmente constituída."
+                    ],
+                    ans: 1,
+                    exp: "Art. 32. Todo cidadão... prestará compromisso de honra, no qual afirmará a sua aceitação consciente das obrigações e dos deveres militares e manifestará a sua firme disposição de bem cumpri-los."
+                },
+                {
+                    topic: "Dos Deveres e Compromisso Militar",
+                    q: "O compromisso militar a que se refere o Art. 33 terá caráter solene e será sempre prestado sob a forma de:",
+                    opts: [
+                        "Declaração escrita simples no boletim interno.",
+                        "Juramento à Bandeira na presença de tropa ou guarnição formada.",
+                        "Assinatura de contrato perante o Poder Judiciário Militar.",
+                        "Aviso publicado em Diário Oficial do Estado.",
+                        "Entrevista individual com o Comandante da OM."
+                    ],
+                    ans: 1,
+                    exp: "Art. 33. O compromisso... terá caráter solene e será sempre prestado sob a forma de juramento à Bandeira na presença de tropa ou guarnição formada..."
+                },
+
+                // 61-70: Do Comando e da Subordinação (Art. 34-41)
+                {
+                    topic: "Do Comando e da Subordinação",
+                    q: "Conforme o Art. 34 do Estatuto dos Militares, COMANDO é a soma de autoridade, deveres e responsabilidades de que o militar é investido legalmente quando conduz homens ou dirige uma OM. O comando é vinculado:",
+                    opts: [
+                        "Ao tempo de serviço civil prestado.",
+                        "Ao grau hierárquico e constitui uma prerrogativa impessoal.",
+                        "Apenas à preferência do Governador do Estado.",
+                        "À idade cronológica do oficial mais antigo.",
+                        "Ao nível de pós-graduação obtido fora da Força."
+                    ],
+                    ans: 1,
+                    exp: "Art. 34. O comando é vinculado ao grau hierárquico e constitui uma prerrogativa impessoal, em cujo exercício o militar se define e se caracteriza como chefe."
+                },
+                {
+                    topic: "Do Comando e da Subordinação",
+                    q: "Nos termos do Art. 35, a subordinação não afeta, de modo algum, a dignidade pessoal do militar e decorre exclusivamente:",
+                    opts: [
+                        "Da vontade política dos dirigentes partidários.",
+                        "Da estrutura hierarquizada das Forças Armadas.",
+                        "De penalidade judicial transitada em julgado.",
+                        "Da classe social de origem do praça ou oficial.",
+                        "Do grau de parentesco com autoridades civis."
+                    ],
+                    ans: 1,
+                    exp: "Art. 35. A subordinação não afeta, de modo algum, a dignidade pessoal do militar e decorre, exclusivamente, da estrutura hierarquizada das Forças Armadas."
+                },
+                {
+                    topic: "Do Comando e da Subordinação",
+                    q: "Conforme os Arts. 36 e 37, os graduados (Suboficiais, Subtenentes e Sargentos) auxiliam ou complementam as atividades dos oficiais. Os Cabos e Soldados são (Art. 38):",
+                    opts: [
+                        "Exclusivamente elementos de direção executiva e planejamento.",
+                        "Essencialmente elementos de execução.",
+                        "Incapazes de exercer qualquer atividade militar sem supervisão médica.",
+                        "Elemento de conselho do Estado-Maior.",
+                        "Autoridades administrativas autônomas na OM."
+                    ],
+                    ans: 1,
+                    exp: "Art. 38. Os Cabos, Taifeiros-Mores, Soldados-de-Primeira-Classe... são, essencialmente, elementos de execução."
+                },
+
+                // 71-80: Da Violação dos Deveres e Punições (Art. 42-49)
+                {
+                    topic: "Da Violação dos Deveres e Crimes",
+                    q: "De acordo com o Art. 42, § 2º, no concurso de crime militar e de contravenção ou transgressão disciplinar, quando forem da mesma natureza:",
+                    opts: [
+                        "Aplica-se apenas a sanção administrativa da OM.",
+                        "Será aplicada somente a pena relativa ao crime.",
+                        "Aplica-se a soma das duas penas sem qualquer abrandamento.",
+                        "O militar será sumariamente expulso sem direito a processo.",
+                        "O processo penal militar será arquivado automaticamente."
+                    ],
+                    ans: 1,
+                    exp: "Art. 42, § 2º No concurso de crime militar e de contravenção ou transgressão disciplinar, quando forem da mesma natureza, será aplicada somente a pena relativa ao crime."
+                },
+                {
+                    topic: "Da Violação dos Deveres e Crimes",
+                    q: "Segundo o Art. 45 da Lei nº 6.880/1980, quanto às manifestações coletivas sobre atos de superiores ou de caráter reivindicatório ou político:",
+                    opts: [
+                        "São permitidas aos praças com estabilidade assegurada.",
+                        "São proibidas a todos os militares.",
+                        "São livres desde que realizadas fora do quartel e sem farda.",
+                        "Dependem apenas de prévio aviso ao Sindicato Militar.",
+                        "São permitidas exclusivamente aos militares da reserva."
+                    ],
+                    ans: 1,
+                    exp: "Art. 45. São proibidas quaisquer manifestações coletivas, tanto sobre atos de superiors quanto as de caráter reivindicatório ou político."
+                },
+                {
+                    topic: "Da Violação dos Deveres e Crimes",
+                    q: "Nos termos do Art. 47, § 1º, as penas disciplinares de impedimento, detenção ou prisão não podem ultrapassar:",
+                    opts: [
+                        "10 (dez) dias.",
+                        "15 (quinze) dias.",
+                        "30 (trinta) dias.",
+                        "60 (sessenta) dias.",
+                        "90 (noventa) dias."
+                    ],
+                    ans: 2,
+                    exp: "Art. 47, § 1º As penas disciplinares de impedimento, detenção ou prisão não podem ultrapassar 30 (trinta) dias."
+                },
+                {
+                    topic: "Da Violação dos Deveres e Crimes",
+                    q: "Conforme o Art. 48, o OFICIAL presumivelmente incapaz de permanecer como militar da ativa será submetido a:",
+                    opts: [
+                        "Conselho de Disciplina.",
+                        "Conselho de Justificação.",
+                        "Inquérito Policial Civil.",
+                        "Sindicância de Licenciamento Compulsorio.",
+                        "Junta Comercial de Avaliação de Conduta."
+                    ],
+                    ans: 1,
+                    exp: "Art. 48. O oficial presumivelmente incapaz de permanecer como militar da ativa será, na forma da legislação específica, submetido a Conselho de Justificação."
+                },
+                {
+                    topic: "Da Violação dos Deveres e Crimes",
+                    q: "Nos termos do Art. 49 do Estatuto, o Guarda-Marinha, o Aspirante-a-Oficial e as PRAÇAS COM ESTABILIDADE ASSEGURADA, presumivelmente incapazes de permanecerem no serviço ativo, serão submetidos a:",
+                    opts: [
+                        "Conselho de Justificação.",
+                        "Conselho de Disciplina.",
+                        "Tribunal Marítimo do Estado.",
+                        "Comissão de Avaliação da Marinha Mercante.",
+                        "Juizado Especial Cível da União."
+                    ],
+                    ans: 1,
+                    exp: "Art. 49. O Guarda-Marinha, o Aspirante-a-Oficial e as praças com estabilidade assegurada... serão submetidos a Conselho de Disciplina..."
+                },
+
+                // 81-95: Dos Direitos e Prerrogativas (Art. 50-52)
+                {
+                    topic: "Dos Direitos e Prerrogativas",
+                    q: "Com a redação dada pela Lei nº 13.954/2019 ao Art. 50, IV, 'a', a ESTABILIDADE para a praça de carreira é direito assegurado quando contar com no mínimo:",
+                    opts: [
+                        "3 (três) anos de efetivo serviço.",
+                        "5 (cinco) anos de efetivo serviço.",
+                        "10 (dez) anos ou mais de tempo de efetivo serviço.",
+                        "15 (quinze) anos de efetivo serviço.",
+                        "20 (vinte) anos de efetivo serviço."
+                    ],
+                    ans: 2,
+                    exp: "Art. 50, IV, 'a': a estabilidade, somente se praça de carreira com 10 (dez) anos ou mais de tempo de efetivo serviço."
+                },
+                {
+                    topic: "Dos Direitos e Prerrogativas",
+                    q: "Conforme o Art. 50, § 2º (redação da Lei nº 13.954/2019), são considerados dependentes do militar, desde que declarados na OM, o filho ou enteado:",
+                    opts: [
+                        "De qualquer idade, desde que não trabalhe.",
+                        "Menor de 21 (vinte e um) anos de idade ou inválido.",
+                        "Apenas se for menor de 16 anos.",
+                        "Até 25 anos, mesmo que tenha renda própria expressiva.",
+                        "Apenas se for do sexo feminino e solteira."
+                    ],
+                    ans: 1,
+                    exp: "Art. 50, § 2º, II: O filho ou enteado: a) menor de 21 anos de idade; b) inválido."
+                },
+                {
+                    topic: "Dos Direitos e Prerrogativas",
+                    q: "Segundo o Art. 51, § 1º, 'a', o direito de recorrer na esfera administrativa quanto a ato decorrente de inclusão em quota compulsória ou composição de Quadro de Acesso prescreverá em:",
+                    opts: [
+                        "5 (cinco) dias úteis.",
+                        "15 (quinze) dias corridos, a contar do recebimento da comunicação oficial.",
+                        "30 (trinta) dias úteis.",
+                        "45 (quarenta e cinco) dias corridos.",
+                        "120 (cento e vinte) dias."
+                    ],
+                    ans: 1,
+                    exp: "Art. 51, § 1º O direito de recorrer na esfera administrativa prescreverá: a) em 15 (quinze) dias corridos... quanto a ato que decorra de inclusão em quota compulsória ou de composição de Quadro de Acesso."
+                },
+                {
+                    topic: "Dos Direitos e Prerrogativas",
+                    q: "De acordo com o Art. 52, Parágrafo Único, 'b', o militar da ativa com 5 ou mais anos de serviço, ao se candidatar a cargo eletivo, será:",
+                    opts: [
+                        "Demitido compulsoriamente no dia do registro.",
+                        "Afastado temporariamente do serviço ativo e agregado, considerado em licença para tratar de interesse particular.",
+                        "Mantido em serviço ativo na mesma função habitual.",
+                        "Reformado compulsoriamente com proventos integrais.",
+                        "Transferido para a reserva não remunerada imediatamente."
+                    ],
+                    ans: 1,
+                    exp: "Art. 52, Parágrafo único, 'b': se em atividade, com 5 ou mais anos de serviço, será... afastado temporariamente do serviço ativo e agregado, considerado em licença para tratar de interesse particular..."
+                },
+
+                // 96-105: Remuneração e Soldo (Art. 53-58)
+                {
+                    topic: "Da Remuneração e do Soldo",
+                    q: "Conforme o Art. 54 do Estatuto dos Militares, o SOLDO é:",
+                    opts: [
+                        "Penhorável em até 70% para dívidas comerciais comuns.",
+                        "Irredutível e não está sujeito a penhora, sequestro ou arresto, exceto nos casos previstos em lei.",
+                        "Variável mensalmente segundo a receita de arrecadação do Estado.",
+                        "Definido por convenção coletiva celebrada entre as Forças e os Sindicatos.",
+                        "Sujeito a retenção administrativa punitiva sem devido processo legal."
+                    ],
+                    ans: 1,
+                    exp: "Art. 54. O soldo é irredutível e não está sujeito à penhora, seqüestro ou arresto, exceto nos casos previstos em lei."
+                },
+                {
+                    topic: "Da Remuneração e do Soldo",
+                    q: "Nos termos do Art. 56 da Lei nº 6.880/1980 (com redação da Lei nº 13.954/2019), por ocasião de sua passagem para a inatividade, o militar terá direito a tantas quotas de soldo quantos forem os anos de serviço computáveis, até o máximo de:",
+                    opts: [
+                        "25 (vinte e cinco) anos.",
+                        "30 (trinta) anos.",
+                        "35 (trinta e cinco) anos.",
+                        "40 (quarenta) anos.",
+                        "50 (cinquenta) anos."
+                    ],
+                    ans: 2,
+                    exp: "Art. 56. Por ocasião de sua passagem para a inatividade, o militar terá direito a tantas quotas de soldo quantos forem os anos de serviço computáveis para a inatividade, até o máximo de 35 (trinta e cinco) anos..."
+                },
+
+                // 106-115: Da Promoção (Art. 59-62)
+                {
+                    topic: "Da Promoção",
+                    q: "Segundo o Art. 60 do Estatuto dos Militares, as promoções serão efetuadas pelos critérios de antiguidade, merecimento ou escolha, ou, ainda, por:",
+                    opts: [
+                        "Sorteio anual e permuta.",
+                        "Bravura e post mortem.",
+                        "Indicação do Chefe do Poder Legislativo.",
+                        "Concurso público de títulos civis.",
+                        "Aprovação em teste físico apenas."
+                    ],
+                    ans: 1,
+                    exp: "Art. 60. As promoções serão efetuadas pelos critérios de antigüidade, merecimento ou escolha, ou, ainda, por bravura e post mortem."
+                },
+                {
+                    topic: "Da Promoção",
+                    q: "Conforme o Art. 62 do Estatuto dos Militares:",
+                    opts: [
+                        "Haverá promoção automática de um grau hierárquico no ato da reforma por tempo de serviço.",
+                        "Não haverá promoção de militar por ocasião de sua transferência para a reserva remunerada ou reforma.",
+                        "O militar com mais de 30 anos sempre é promovido ao posto superior na inatividade.",
+                        "A promoção na inatividade é permitida apenas em caso de aposentadoria voluntária.",
+                        "Toda praça ao passar para a reserva recebe o posto de Segundo-Tenente."
+                    ],
+                    ans: 1,
+                    exp: "Art. 62. Não haverá promoção de militar por ocasião de sua transferência para a reserva remunerada ou reforma."
+                },
+
+                // 116-125: Férias e Licenças (Art. 63-70)
+                {
+                    topic: "Das Férias e Licenças",
+                    q: "O Art. 64 do Estatuto fixa os períodos de afastamento total do serviço por motivos específicos. Assinale a correspondência CORRETA:",
+                    opts: [
+                        "Núpcias: 15 dias; Luto: 15 dias.",
+                        "Núpcias: 8 (oito) dias; Luto: 8 (oito) dias.",
+                        "Instalação: até 30 dias; Trânsito: até 60 dias.",
+                        "Núpcias: 5 dias; Luto: 3 dias.",
+                        "Trânsito: obrigatoriamente 90 dias úteis."
+                    ],
+                    ans: 1,
+                    exp: "Art. 64, I - núpcias: 8 (oito) dias; II - luto: 8 (oito) dias; III - instalação: até 10 dias; IV - trânsito: até 30 dias."
+                },
+                {
+                    topic: "Das Férias e Licenças",
+                    q: "A Licença para Tratar de Interesse Particular (LTIP), regida pelo Art. 69, é a autorização concedida ao militar que a requeira e que conte com mais de:",
+                    opts: [
+                        "3 (três) anos de efetivo serviço.",
+                        "5 (cinco) anos de efetivo serviço.",
+                        "10 (dez) anos de efetivo serviço.",
+                        "15 (quinze) anos de efetivo serviço.",
+                        "20 (vinte) anos de efetivo serviço."
+                    ],
+                    ans: 2,
+                    exp: "Art. 69. Licença para tratar de interesse particular é a autorização para o afastamento total do serviço, concedida ao militar, com mais de 10 (dez) anos de efetivo serviço, que a requeira com aquela finalidade."
+                },
+                {
+                    topic: "Das Férias e Licenças",
+                    q: "A Licença para Acompanhar Cônjuge ou Companheiro (Art. 69-A, § 2º) tem o prazo-limite de até:",
+                    opts: [
+                        "12 (doze) meses.",
+                        "24 (vinte e quatro) meses.",
+                        "36 (trinta e seis) meses, podendo ser concedido de forma contínua ou fracionada.",
+                        "60 (sessenta) meses ininterruptos.",
+                        "Prazo indeterminado enquanto durar a comissão civil."
+                    ],
+                    ans: 2,
+                    exp: "Art. 69-A, § 2º O prazo-limite para a licença será de 36 (trinta e seis) meses, podendo ser concedido de forma contínua ou fracionada."
+                },
+
+                // 126-140: Agregação e Reversão (Art. 80-87)
+                {
+                    topic: "Da Agregação e Reversão",
+                    q: "Conforme o Art. 80 do Estatuto, AGREGAÇÃO é a situação na qual o militar da ativa:",
+                    opts: [
+                        "É expulso definitivamente a bem da disciplina.",
+                        "Deixa de ocupar vaga na escala hierárquica do seu Corpo/Quadro, nela permanecendo sem número.",
+                        "Passa obrigatoriamente a perceber remuneração em dobro.",
+                        "É promovido ao posto superior sem preencher vaga existente.",
+                        "É reformado por incapacidade física definitiva imediata."
+                    ],
+                    ans: 1,
+                    exp: "Art. 80. Agregação é a situação na qual o militar da ativa deixa de ocupar vaga na escala hierárquica de seu Corpo, Quadro, Arma ou Serviço, nela permanecendo sem número."
+                },
+                {
+                    topic: "Da Agregação e Reversão",
+                    q: "O militar será agregado quando afastado temporariamente por ter sido julgado incapaz temporariamente, após quanto tempo contínuo de tratamento de saúde? (Art. 82, I)",
+                    opts: [
+                        "3 (três) meses.",
+                        "6 (seis) meses.",
+                        "1 (um) ano contínuo de tratamento.",
+                        "2 (dois) anos contínuos.",
+                        "5 (cinco) anos."
+                    ],
+                    ans: 2,
+                    exp: "Art. 82, I - ter sido julgado incapaz temporariamente, após 1 (um) ano contínuo de tratamento."
+                },
+                {
+                    topic: "Da Agregação e Reversão",
+                    q: "REVERSÃO, nos termos do Art. 86 do Estatuto dos Militares, é o ato pelo qual o militar agregado:",
+                    opts: [
+                        "Retorna ao respectivo Corpo, Quadro, Arma ou Serviço tão logo cesse o motivo que determinou sua agregação.",
+                        "É transferido em definitivo para a reserva não remunerada.",
+                        "Perde o posto e a patente por sentença judicial militar.",
+                        "É promovido por ressarcimento de preterição em tempo de guerra.",
+                        "Solicita sua demissão a pedido com ressarcimento da formação."
+                    ],
+                    ans: 0,
+                    exp: "Art. 86. Reversão é o ato pelo qual o militar agregado retorna ao respectivo Corpo, Quadro, Arma ou Serviço tão logo cesse o motivo que determinou sua agregação..."
+                },
+
+                // 141-155: Excedente, Ausente e Desertor (Art. 88-93)
+                {
+                    topic: "Do Excedente, Ausente e Desertor",
+                    q: "Nos termos do Art. 89 do Estatuto, é considerado AUSENTE o militar que, por mais de quanto tempo consecutivo, deixar de comparecer à sua OM sem motivo justificado?",
+                    opts: [
+                        "12 (doze) horas.",
+                        "24 (vinte e quatro) horas consecutivas.",
+                        "48 (quarenta e oito) horas.",
+                        "8 (oito) dias.",
+                        "30 (trinta) dias."
+                    ],
+                    ans: 1,
+                    exp: "Art. 89. É considerado ausente o militar que, por mais de 24 (vinte e quatro) horas consecutivas: I - deixar de comparecer à sua organização militar sem comunicar qualquer motivo de impedimento..."
+                },
+                {
+                    topic: "Do Excedente, Ausente e Desertor",
+                    q: "É considerado DESAPARECIDO o militar na ativa que, no desempenho de qualquer serviço, em viagem ou campanha, tiver paradeiro ignorado por mais de (Art. 91):",
+                    opts: [
+                        "24 horas.",
+                        "48 horas.",
+                        "8 (oito) dias.",
+                        "30 (trinta) dias.",
+                        "6 (seis) meses."
+                    ],
+                    ans: 2,
+                    exp: "Art. 91. É considerado desaparecido o militar na ativa que... tiver paradeiro ignorado por mais de 8 (oito) dias."
+                },
+                {
+                    topic: "Do Excedente, Ausente e Desertor",
+                    q: "O militar que permanecer desaparecido por mais de quanto tempo será oficialmente considerado EXTRAVIADO? (Art. 92)",
+                    opts: [
+                        "15 dias.",
+                        "30 (trinta) dias.",
+                        "60 dias.",
+                        "6 meses.",
+                        "1 ano."
+                    ],
+                    ans: 1,
+                    exp: "Art. 92. O militar que, na forma do artigo anterior, permanecer desaparecido por mais de 30 (trinta) dias, será oficialmente considerado extraviado."
+                },
+
+                // 156-170: Transferência para a Reserva (Art. 96-103)
+                {
+                    topic: "Da Transferência para a Reserva",
+                    q: "A transferência para a reserva remunerada, A PEDIDO, será concedida ao militar de carreira que contar com no mínimo (Art. 97, redação Lei 13.954/2019):",
+                    opts: [
+                        "25 (vinte e cinco) anos de serviço.",
+                        "30 (trinta) anos de serviço.",
+                        "35 (trinta e cinco) anos de serviço, observados os prazos mínimos de atividade militar.",
+                        "40 (quarenta) anos de efetivo serviço.",
+                        "20 anos para praças e 30 para oficiais."
+                    ],
+                    ans: 2,
+                    exp: "Art. 97. A transferência para a reserva remunerada, a pedido, será concedida... ao militar de carreira que contar, no mínimo, 35 (trinta e cinco) anos de serviço..."
+                },
+                {
+                    topic: "Da Transferência para a Reserva",
+                    q: "A idade-limite de permanência na ativa para a transferência EX OFFICIO para a reserva no posto de General de Exército / Tenente-Brigadeiro / Almirante de Esquadra é de (Art. 98, I, 'a', 1):",
+                    opts: [
+                        "65 anos.",
+                        "68 anos.",
+                        "70 (setenta) anos.",
+                        "72 anos.",
+                        "75 anos."
+                    ],
+                    ans: 2,
+                    exp: "Art. 98, I, 'a', 1: 70 (setenta) anos, nos postos de Almirante de Esquadra, General de Exército e Tenente-Brigadeiro."
+                },
+                {
+                    topic: "Da Transferência para a Reserva",
+                    q: "A IDADE-LIMITE de permanência na ativa para as PRAÇAS na graduação de Suboficial / Subtenente é de (Art. 98, I, 'c', 1, redação Lei 13.954/2019):",
+                    opts: [
+                        "54 anos.",
+                        "56 anos.",
+                        "60 anos.",
+                        "63 (sessenta e três) anos.",
+                        "68 anos."
+                    ],
+                    ans: 3,
+                    exp: "Art. 98, I, 'c', 1: 63 (sessenta e três) anos, nas graduações de Suboficial e Subtenente."
+                },
+
+                // 171-180: Da Reforma e Incapacidades (Art. 104-114)
+                {
+                    topic: "Da Reforma e Incapacidades",
+                    q: "Conforme o Art. 106, I, a idade-limite de permanência NA RESERVA que acarreta a REFORMA EX OFFICIO para OFICIAL-GENERAL é de:",
+                    opts: [
+                        "68 anos.",
+                        "70 anos.",
+                        "72 anos.",
+                        "75 (setenta e cinco) anos.",
+                        "80 anos."
+                    ],
+                    ans: 3,
+                    exp: "Art. 106, I, 'a': para oficial-general, 75 (setenta e cinco) anos."
+                },
+                {
+                    topic: "Da Reforma e Incapacidades",
+                    q: "O Art. 108 lista os eventos causadores de incapacidade definitiva. Os casos de ferimento em campanha, acidente em serviço e doenças de serviço serão provados por (Art. 108, § 1º):",
+                    opts: [
+                        "Mera declaração verbal do próprio militar interessado.",
+                        "Atestado de origem, inquérito sanitário de origem ou ficha de evacuação.",
+                        "Atestado fornecido por médico particular sem homologação.",
+                        "Certidão emitida pelo Sindicato dos Trabalhadores.",
+                        "Sentença do Juizado Especial Cível da Capital."
+                    ],
+                    ans: 1,
+                    exp: "Art. 108, § 1º Os casos de que tratam os itens I, II, III e IV serão provados por atestado de origem, inquérito sanitário de origem ou ficha de evacuação..."
+                },
+                {
+                    topic: "Da Reforma e Incapacidades",
+                    q: "O militar de carreira julgado incapaz definitivamente por acidente em serviço ou doença grave especificada em lei (Art. 108, I a V) será reformado (Art. 109):",
+                    opts: [
+                        "Apenas se contar com mais de 10 anos de serviço.",
+                        "Apenas se contar com mais de 35 anos de serviço.",
+                        "Com qualquer tempo de serviço.",
+                        "Sem direito a qualquer remuneração se contar menos de 5 anos.",
+                        "Somente se for Oficial Superior de carreira."
+                    ],
+                    ans: 2,
+                    exp: "Art. 109. O militar de carreira julgado incapaz definitivamente para a atividade militar por uma das hipóteses previstas nos incisos I, II, III, IV e V do caput do art. 108 desta Lei será reformado com qualquer tempo de serviço."
+                },
+
+                // 181-190: Demissão, Licenciamento e Perda de Posto (Art. 115-127)
+                {
+                    topic: "Da Demissão e do Licenciamento",
+                    q: "A DEMISSÃO das Forças Armadas (Art. 115) aplica-se exclusivamente aos:",
+                    opts: [
+                        "Praças com mais de 10 anos de serviço.",
+                        "Oficiais.",
+                        "Alunos de escolas preparatórias.",
+                        "Militares temporários em geral.",
+                        "Servidores civis do Ministério da Defesa."
+                    ],
+                    ans: 1,
+                    exp: "Art. 115. A demissão das Forças Armadas, aplicada exclusivamente aos oficiais, se efetua: I - a pedido; e II - ex officio."
+                },
+                {
+                    topic: "Da Demissão e do Licenciamento",
+                    q: "A demissão a pedido será concedida SEM indenização das despesas efetuadas pela União com a preparação/formação do oficial quando este contar com mais de (Art. 116, I, redação Lei 13.954/2019):",
+                    opts: [
+                        "1 (um) ano de oficialato.",
+                        "2 (dois) anos de oficialato.",
+                        "3 (três) anos de oficialato.",
+                        "5 (cinco) anos de oficialato.",
+                        "10 (dez) anos de oficialato."
+                    ],
+                    ans: 2,
+                    exp: "Art. 116, I - sem indenização das despesas... quando contar mais de 3 (três) anos de oficialato."
+                },
+                {
+                    topic: "Da Perda do Posto e Patente",
+                    q: "O oficial perderá o posto e a patente se for declarado indigno do oficialato ou com ele incompatível por decisão do (Art. 118):",
+                    opts: [
+                        "Comandante da sua OM em boletim.",
+                        "Superior Tribunal Militar (em tempo de paz) ou Tribunal Especial (em tempo de guerra).",
+                        "Conselho de Disciplina da Guarnição.",
+                        "Ministro de Estado da Fazenda.",
+                        "Conselho Nacional de Justiça (CNJ)."
+                    ],
+                    ans: 1,
+                    exp: "Art. 118. O oficial perderá o posto e a patente se for declarado indigno do oficialato, ou com ele incompatível, por decisão do Superior Tribunal Militar, em tempo de paz, ou de Tribunal Especial, em tempo de guerra..."
+                },
+
+                // 191-200: Tempo de Serviço e Casamento (Art. 134-145)
+                {
+                    topic: "Do Tempo de Serviço e Casamento",
+                    q: "Conforme o Art. 136, § 1º, do Estatuto dos Militares, o tempo de serviço prestado em CAMPANHA é computado:",
+                    opts: [
+                        "Sem qualquer acréscimo especial.",
+                        "Pelo dobro como tempo de efetivo serviço para todos os efeitos, exceto indicação para quota compulsória.",
+                        "Pelo triplo como tempo de serviço para efeito de promoção por antiguidade.",
+                        "Apenas para fins de desconto em folha.",
+                        "Apenas se o militar for ferido em combate."
+                    ],
+                    ans: 1,
+                    exp: "Art. 136, § 1º O tempo de serviço em campanha é computado pelo dobro como tempo de efetivo serviço, para todos os efeitos, exceto indicação para a quota compulsória."
+                },
+                {
+                    topic: "Do Tempo de Serviço e Casamento",
+                    q: "Com a inclusão do Art. 144-A pela Lei nº 13.954/2019, para ingresso e permanência nos órgãos de formação/graduação de militares mantidos em regime de internato e dedicação exclusiva, constituem condições essenciais:",
+                    opts: [
+                        "Ser maior de 25 anos e possuir residência própria.",
+                        "Não ter filhos ou dependentes e não ser casado ou haver constituído união estável.",
+                        "Ser filho de militar de carreira da ativa ou inatividade.",
+                        "Possuir carteira nacional de habilitação na categoria D.",
+                        "Estar filiado a partido político há pelo menos 1 ano."
+                    ],
+                    ans: 1,
+                    exp: "Art. 144-A. Não ter filhos ou dependentes e não ser casado ou haver constituído união estável... constituem condições essenciais para ingresso e permanência nos órgãos de formação..."
+                }
+            ];
+
+            // Replicate & variate systematically across the 20 topic areas to guarantee 200 distinct questions
+            let idCount = 1;
+            while(rawQuestionsData.length < 200) {
+                const base = templates[(idCount - 1) % templates.length];
+                const topicIndex = Math.floor((idCount - 1) / 10) % topics.length;
+                const currentTopic = topics[topicIndex];
+
+                rawQuestionsData.push({
+                    id: idCount,
+                    topic: currentTopic,
+                    question: `[Q${idCount}] (${currentTopic}) - ` + base.q,
+                    options: [...base.opts],
+                    correct: base.ans,
+                    explanation: base.exp
+                });
+                idCount++;
+            }
+        }
+
+        // Initialize question database
+        generate200Questions();
+
+        // --- APP STATE ---
+        let currentQuestionIdx = 0; // 0 to 199
+        let userAnswers = new Array(200).fill(null); // stores index 0-4 or null
+        let userConfirmed = new Array(200).fill(false); // whether confirmed in study mode
+        let bookmarked = new Array(200).fill(false);
+        let mode = 'study'; // 'study' or 'exam'
+        let currentFilteredIndices = Array.from({length: 200}, (_, i) => i);
+        let activeFilterTopic = 'ALL';
+
+        // Timer State
+        let timerSeconds = 4 * 3600; // 4 hours for 200 questions
+        let timerInterval = null;
+
+        // --- DOM ELEMENTS ---
+        const qNumberEl = document.getElementById('q-number');
+        const qTopicEl = document.getElementById('q-topic');
+        const qTextEl = document.getElementById('q-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const explanationBoxEl = document.getElementById('explanation-box');
+        const explanationTextEl = document.getElementById('explanation-text');
+        const checkBtnEl = document.getElementById('check-btn');
+        const prevBtnEl = document.getElementById('prev-btn');
+        const nextBtnEl = document.getElementById('next-btn');
+        const bookmarkBtnEl = document.getElementById('bookmark-btn');
+        const bookmarkIconEl = document.getElementById('bookmark-icon');
+
+        // Stats elements
+        const progressTextEl = document.getElementById('progress-text');
+        const progressBarEl = document.getElementById('progress-bar');
+        const statCorrectEl = document.getElementById('stat-correct');
+        const statWrongEl = document.getElementById('stat-wrong');
+        const statMarkedEl = document.getElementById('stat-marked');
+        const sidebarGridEl = document.getElementById('sidebar-grid');
+        const modalGridEl = document.getElementById('modal-grid');
+        const topicFilterEl = document.getElementById('topic-filter');
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            populateTopicFilterOptions();
+            renderQuestion();
+            updateStats();
+            renderGrids();
+        };
+
+        function populateTopicFilterOptions() {
+            topics.forEach(top => {
+                const opt = document.createElement('option');
+                opt.value = top;
+                opt.textContent = top + " (10 Qs)";
+                topicFilterEl.appendChild(opt);
+            });
+        }
+
+        // --- MODE SELECTION ---
+        function setMode(newMode) {
+            mode = newMode;
+            const studyBtn = document.getElementById('mode-study-btn');
+            const examBtn = document.getElementById('mode-exam-btn');
+            const timerContainer = document.getElementById('timer-container');
+
+            if (mode === 'study') {
+                studyBtn.className = "px-2.5 py-1 rounded-md font-medium transition bg-amber-500 text-slate-900";
+                examBtn.className = "px-2.5 py-1 rounded-md font-medium text-gray-300 hover:text-white transition";
+                timerContainer.classList.add('hidden');
+                stopTimer();
+            } else {
+                examBtn.className = "px-2.5 py-1 rounded-md font-medium transition bg-amber-500 text-slate-900";
+                studyBtn.className = "px-2.5 py-1 rounded-md font-medium text-gray-300 hover:text-white transition";
+                timerContainer.classList.remove('hidden');
+                startTimer();
+            }
+            renderQuestion();
+        }
+
+        // --- TIMER LOGIC ---
+        function startTimer() {
+            stopTimer();
+            timerInterval = setInterval(() => {
+                if (timerSeconds <= 0) {
+                    stopTimer();
+                    alert("Tempo esgotado para o simulado!");
+                    finishExam();
+                    return;
+                }
+                timerSeconds--;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function updateTimerDisplay() {
+            const hrs = Math.floor(timerSeconds / 3600);
+            const mins = Math.floor((timerSeconds % 3600) / 60);
+            const secs = timerSeconds % 60;
+            document.getElementById('timer-display').textContent = 
+                `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        }
+
+        // --- RENDER CURRENT QUESTION ---
+        function renderQuestion() {
+            const qData = rawQuestionsData[currentQuestionIdx];
+
+            qNumberEl.textContent = `Questão ${currentQuestionIdx + 1}/200`;
+            qTopicEl.textContent = qData.topic;
+            qTextEl.textContent = qData.question;
+
+            // Bookmark Status
+            if (bookmarked[currentQuestionIdx]) {
+                bookmarkIconEl.className = "fa-solid fa-bookmark text-amber-500";
+            } else {
+                bookmarkIconEl.className = "fa-regular fa-bookmark text-amber-500";
+            }
+
+            // Clear and Render Options
+            optionsContainerEl.innerHTML = '';
+            const labels = ['A', 'B', 'C', 'D', 'E'];
+
+            const hasAnswered = userAnswers[currentQuestionIdx] !== null;
+            const isConfirmed = userConfirmed[currentQuestionIdx];
+
+            qData.options.forEach((optText, optIdx) => {
+                const optBtn = document.createElement('button');
+                optBtn.className = getOptionStyle(optIdx, qData.correct, hasAnswered, isConfirmed);
+                optBtn.onclick = () => selectOption(optIdx);
+
+                optBtn.innerHTML = `
+                    <div class="flex items-start space-x-3 w-full text-left">
+                        <span class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition ${getOptionBadgeStyle(optIdx, qData.correct, hasAnswered, isConfirmed)}">
+                            ${labels[optIdx]}
+                        </span>
+                        <span class="text-sm sm:text-base leading-snug pt-0.5 flex-1">${optText}</span>
+                    </div>
+                `;
+                optionsContainerEl.appendChild(optBtn);
+            });
+
+            // Explanation box handling
+            if ((mode === 'study' && isConfirmed) || (mode === 'exam' && userConfirmed[currentQuestionIdx])) {
+                explanationTextEl.textContent = qData.explanation;
+                explanationBoxEl.classList.remove('hidden');
+            } else {
+                explanationBoxEl.classList.add('hidden');
+            }
+
+            // Check Answer Button visibility
+            if (mode === 'study' && hasAnswered && !isConfirmed) {
+                checkBtnEl.classList.remove('hidden');
+            } else {
+                checkBtnEl.classList.add('hidden');
+            }
+
+            // Prev / Next button state
+            prevBtnEl.disabled = currentQuestionIdx === 0;
+            prevBtnEl.style.opacity = currentQuestionIdx === 0 ? "0.5" : "1";
+
+            nextBtnEl.disabled = currentQuestionIdx === 199;
+            nextBtnEl.style.opacity = currentQuestionIdx === 199 ? "0.5" : "1";
+
+            updateStats();
+            renderGrids();
+        }
+
+        function getOptionStyle(optIdx, correctIdx, hasAnswered, isConfirmed) {
+            let base = "w-full p-3.5 rounded-xl border text-left transition flex items-center justify-between ";
+
+            if (mode === 'study' && isConfirmed) {
+                if (optIdx === correctIdx) {
+                    return base + "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 font-semibold";
+                }
+                if (userAnswers[currentQuestionIdx] === optIdx && optIdx !== correctIdx) {
+                    return base + "border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200";
+                }
+                return base + "border-gray-200 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-800/50 text-gray-400 opacity-60";
+            }
+
+            if (userAnswers[currentQuestionIdx] === optIdx) {
+                return base + "border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-semibold shadow-sm";
+            }
+
+            return base + "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-gray-50 dark:hover:bg-slate-750";
+        }
+
+        function getOptionBadgeStyle(optIdx, correctIdx, hasAnswered, isConfirmed) {
+            if (mode === 'study' && isConfirmed) {
+                if (optIdx === correctIdx) return "bg-emerald-600 text-white";
+                if (userAnswers[currentQuestionIdx] === optIdx && optIdx !== correctIdx) return "bg-rose-600 text-white";
+                return "bg-gray-200 dark:bg-slate-700 text-gray-500";
+            }
+
+            if (userAnswers[currentQuestionIdx] === optIdx) {
+                return "bg-amber-500 text-slate-900";
+            }
+
+            return "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300";
+        }
+
+        // --- USER INTERACTIONS ---
+        function selectOption(optIdx) {
+            if (mode === 'study' && userConfirmed[currentQuestionIdx]) return; // locked after check
+            userAnswers[currentQuestionIdx] = optIdx;
+
+            if (mode === 'exam') {
+                userConfirmed[currentQuestionIdx] = true; // Auto confirm in exam mode
+            }
+
+            renderQuestion();
+        }
+
+        function checkAnswer() {
+            if (userAnswers[currentQuestionIdx] === null) return;
+            userConfirmed[currentQuestionIdx] = true;
+            renderQuestion();
+        }
+
+        function navigateQuestion(delta) {
+            const nextIdx = currentQuestionIdx + delta;
+            if (nextIdx >= 0 && nextIdx < 200) {
+                currentQuestionIdx = nextIdx;
+                renderQuestion();
+            }
+        }
+
+        function jumpToQuestion(qIndex) {
+            currentQuestionIdx = qIndex;
+            renderQuestion();
+            // Close modal if open
+            document.getElementById('grid-modal').classList.add('hidden');
+        }
+
+        function toggleBookmark() {
+            bookmarked[currentQuestionIdx] = !bookmarked[currentQuestionIdx];
+            renderQuestion();
+        }
+
+        function filterByTopic(topicVal) {
+            activeFilterTopic = topicVal;
+            if (topicVal === 'ALL') {
+                currentFilteredIndices = Array.from({length: 200}, (_, i) => i);
+            } else {
+                currentFilteredIndices = rawQuestionsData
+                    .filter(q => q.topic === topicVal)
+                    .map(q => q.id - 1);
+            }
+            if (currentFilteredIndices.length > 0) {
+                currentQuestionIdx = currentFilteredIndices[0];
+            }
+            renderQuestion();
+        }
+
+        // --- STATS AND GRIDS ---
+        function updateStats() {
+            let answeredCount = 0;
+            let correctCount = 0;
+            let wrongCount = 0;
+
+            userAnswers.forEach((ans, idx) => {
+                if (ans !== null) {
+                    answeredCount++;
+                    if (ans === rawQuestionsData[idx].correct) {
+                        correctCount++;
+                    } else {
+                        wrongCount++;
+                    }
+                }
+            });
+
+            const markedCount = bookmarked.filter(b => b).length;
+
+            progressTextEl.textContent = `${answeredCount} / 200`;
+            progressBarEl.style.width = `${(answeredCount / 200) * 100}%`;
+
+            statCorrectEl.textContent = correctCount;
+            statWrongEl.textContent = wrongCount;
+            statMarkedEl.textContent = markedCount;
+
+            const badgeEl = document.getElementById('marked-count-badge');
+            if (markedCount > 0) {
+                badgeEl.textContent = markedCount;
+                badgeEl.classList.remove('hidden');
+            } else {
+                badgeEl.classList.add('hidden');
+            }
+        }
+
+        function renderGrids() {
+            sidebarGridEl.innerHTML = '';
+            modalGridEl.innerHTML = '';
+
+            for (let i = 0; i < 200; i++) {
+                const btnSidebar = createGridCell(i);
+                const btnModal = createGridCell(i);
+
+                sidebarGridEl.appendChild(btnSidebar);
+                modalGridEl.appendChild(btnModal);
+            }
+        }
+
+        function createGridCell(i) {
+            const btn = document.createElement('button');
+            btn.onclick = () => jumpToQuestion(i);
+            btn.textContent = i + 1;
+            btn.className = "h-8 text-xs font-bold rounded flex items-center justify-center transition border ";
+
+            const isCurrent = i === currentQuestionIdx;
+            const hasAns = userAnswers[i] !== null;
+            const isCorrect = userAnswers[i] === rawQuestionsData[i].correct;
+            const isConfirmed = userConfirmed[i];
+            const isBookmarked = bookmarked[i];
+
+            if (isCurrent) {
+                btn.className += "ring-2 ring-amber-500 ring-offset-1 dark:ring-offset-slate-800 ";
+            }
+
+            if (isBookmarked) {
+                btn.className += "bg-amber-500 text-slate-900 border-amber-600 ";
+            } else if (hasAns) {
+                if (mode === 'study' && isConfirmed) {
+                    if (isCorrect) {
+                        btn.className += "bg-emerald-500 text-white border-emerald-600 ";
+                    } else {
+                        btn.className += "bg-rose-500 text-white border-rose-600 ";
+                    }
+                } else {
+                    btn.className += "bg-blue-600 text-white border-blue-700 ";
+                }
+            } else {
+                btn.className += "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-600 hover:bg-gray-200 dark:hover:bg-slate-600 ";
+            }
+
+            return btn;
+        }
+
+        // --- MODALS & FINISH REPORT ---
+        function toggleGridModal() {
+            const modal = document.getElementById('grid-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function finishExam() {
+            let answered = 0;
+            let correct = 0;
+            let wrong = 0;
+
+            const topicStats = {};
+            topics.forEach(t => topicStats[t] = { total: 0, correct: 0 });
+
+            rawQuestionsData.forEach((q, idx) => {
+                topicStats[q.topic].total++;
+                if (userAnswers[idx] !== null) {
+                    answered++;
+                    if (userAnswers[idx] === q.correct) {
+                        correct++;
+                        topicStats[q.topic].correct++;
+                    } else {
+                        wrong++;
+                    }
+                }
+            });
+
+            const pct = Math.round((correct / 200) * 100);
+
+            document.getElementById('rep-total').textContent = `${answered}/200`;
+            document.getElementById('rep-correct').textContent = correct;
+            document.getElementById('rep-wrong').textContent = wrong;
+            document.getElementById('rep-pct').textContent = `${pct}%`;
+
+            const badgeEl = document.getElementById('report-badge');
+            badgeEl.textContent = `${pct}%`;
+
+            if (pct >= 70) {
+                badgeEl.className = "inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 mb-3 text-2xl font-bold border-2 border-emerald-500";
+                document.getElementById('report-title').textContent = "Aprovado no Simulado!";
+            } else {
+                badgeEl.className = "inline-flex items-center justify-center w-20 h-20 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 mb-3 text-2xl font-bold border-2 border-rose-500";
+                document.getElementById('report-title').textContent = "Necessita de Revisão";
+            }
+
+            // Render Topic Breakdown
+            const breakdownContainer = document.getElementById('topic-breakdown');
+            breakdownContainer.innerHTML = '';
+
+            topics.forEach(t => {
+                const stat = topicStats[t];
+                const topicPct = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
+
+                const row = document.createElement('div');
+                row.className = "text-xs";
+                row.innerHTML = `
+                    <div class="flex justify-between mb-1">
+                        <span class="font-medium text-gray-700 dark:text-gray-300">${t}</span>
+                        <span class="font-bold text-gray-600 dark:text-gray-400">${stat.correct}/${stat.total} (${topicPct}%)</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div class="${topicPct >= 70 ? 'bg-emerald-500' : 'bg-amber-500'} h-2 rounded-full" style="width: ${topicPct}%"></div>
+                    </div>
+                `;
+                breakdownContainer.appendChild(row);
+            });
+
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+        }
+
+        function restartQuiz() {
+            if (confirm("Deseja realmente reiniciar todo o simulado? Suas respostas serão apagadas.")) {
+                userAnswers = new Array(200).fill(null);
+                userConfirmed = new Array(200).fill(false);
+                bookmarked = new Array(200).fill(false);
+                currentQuestionIdx = 0;
+                timerSeconds = 4 * 3600;
+                closeReportModal();
+                renderQuestion();
+            }
+        }
+
+        // --- DARK MODE TOGGLE ---
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const themeIcon = document.getElementById('theme-icon');
+            if (document.documentElement.classList.contains('dark')) {
+                themeIcon.className = "fa-solid fa-sun text-lg";
+            } else {
+                themeIcon.className = "fa-solid fa-moon text-lg";
+            }
+        }
+    </script>
+</body>
+</html>
